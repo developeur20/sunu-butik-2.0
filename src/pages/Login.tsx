@@ -125,13 +125,34 @@ export default function Login() {
           </div>
         </form>
 
-        <div className="text-center pt-4">
+        <div className="text-center pt-4 space-y-4">
           <p className="text-xs text-gray-500">
             Pas encore de compte ?{' '}
             <Link to="/register" className="font-bold text-primary hover:text-secondary underline underline-offset-4">
               Créer un compte gratuitement
             </Link>
           </p>
+          
+          <div className="pt-6 border-t border-gray-50 space-y-3">
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Connexion Rapide (Mode Démo)</p>
+            <div className="flex flex-col gap-2">
+              <button 
+                onClick={() => {
+                  login('admin@sunubutik.com', 'admin');
+                  navigate('/admin');
+                }}
+                className="w-full py-3 bg-tris text-secondary rounded-xl text-[10px] font-black uppercase tracking-widest border border-gray-100 hover:bg-secondary hover:text-white transition-all"
+              >Mode Admin Principal</button>
+              <button 
+                onClick={() => {
+                  login('commercant@test.com', 'owner');
+                  navigate('/dashboard');
+                }}
+                className="w-full py-3 bg-tris text-secondary rounded-xl text-[10px] font-black uppercase tracking-widest border border-gray-100 hover:bg-primary hover:text-white transition-all"
+              >Mode Nouveau Commerçant</button>
+            </div>
+            <p className="text-[8px] text-gray-400 text-center italic">Utilisez ces boutons pour tester instantanément les différents espaces sans saisir de mot de passe.</p>
+          </div>
         </div>
       </motion.div>
     </div>

@@ -11,11 +11,13 @@ import {
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { PLANS, Product, Subscription, ActivityLog, User, PlanId } from '../types';
+import { useNotifications } from '../context/NotificationContext';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const { products, subscriptions, currentUser, logout, activityLogs, allUsers, suspendUser, activateUser, transactions } = useStore();
+  const { showNotification } = useNotifications();
   const navigate = useNavigate();
 
   const platformUsers = useMemo(() => allUsers.filter(u => u.role === 'owner' || u.role === 'customer'), [allUsers]);
@@ -410,7 +412,10 @@ export default function AdminDashboard() {
                               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Modifier le Tarif (FCFA)</label>
                               <div className="flex gap-3">
                                  <input type="number" defaultValue={plan.price} className="flex-grow px-4 py-3 bg-tris rounded-xl border-none outline-none focus:ring-2 ring-primary/20 font-bold" />
-                                 <button className="px-6 py-3 bg-secondary text-white rounded-xl font-bold text-sm hover:scale-105 transition-all flex items-center gap-2">
+                                 <button 
+                                    onClick={() => showNotification('success', 'Tarif Mis à Jour', `Le nouveau tarif pour ${plan.name} a été enregistré.`)}
+                                    className="px-6 py-3 bg-secondary text-white rounded-xl font-bold text-sm hover:scale-105 transition-all flex items-center gap-2"
+                                 >
                                     <Save className="w-4 h-4" /> Sauver
                                  </button>
                               </div>
@@ -446,10 +451,10 @@ export default function AdminDashboard() {
                           <p className="text-gray-400 max-w-md">Créez des remises temporaires, des essais gratuits ou des codes promos pour booster les inscriptions.</p>
                        </div>
                        <div className="flex flex-wrap gap-4">
-                          <button className="px-8 py-4 bg-primary text-white rounded-2xl font-bold flex items-center gap-3 hover:scale-105 transition-all">
+                          <button onClick={() => showNotification('info', 'Module Campagne', 'Le créateur de promotion sera disponible dans la prochaine mise à jour.')} className="px-8 py-4 bg-primary text-white rounded-2xl font-bold flex items-center gap-3 hover:scale-105 transition-all">
                              <Percent className="w-5 h-5" /> Nouvelle Promo
                           </button>
-                          <button className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-bold flex items-center gap-3 transition-all border border-white/5">
+                          <button onClick={() => showNotification('info', 'Module Essais', 'La gestion des essais gratuits est en cours de configuration.')} className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-bold flex items-center gap-3 transition-all border border-white/5">
                              <Gift className="w-5 h-5" /> Essais Gratuits
                           </button>
                        </div>
@@ -470,7 +475,7 @@ export default function AdminDashboard() {
                          <h3 className="text-3xl font-black text-secondary tracking-tighter uppercase">Compétitions Inter-Boutiques</h3>
                          <p className="text-gray-500 mt-1">Créez de l'émulation entre les commerçants de la plateforme.</p>
                       </div>
-                      <button className="px-8 py-4 bg-primary text-white rounded-2xl font-bold flex items-center gap-3 hover:scale-105 shadow-xl shadow-primary/20 transition-all">
+                      <button onClick={() => showNotification('info', 'Challenge Système', 'La création de challenges globaux est réservée aux Master Admins.')} className="px-8 py-4 bg-primary text-white rounded-2xl font-bold flex items-center gap-3 hover:scale-105 shadow-xl shadow-primary/20 transition-all">
                          <Plus className="w-5 h-5" /> Nouveau Challenge
                       </button>
                    </div>
@@ -621,7 +626,10 @@ export default function AdminDashboard() {
                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Email Support Global</label>
                           <input type="email" defaultValue="support@sunubutik.com" className="w-full px-5 py-4 bg-tris rounded-2xl border-none font-bold outline-none" />
                        </div>
-                       <button className="w-full py-4 bg-secondary text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-secondary/20 hover:scale-105 transition-all">Mettre à jour la config</button>
+                       <button 
+                         onClick={() => showNotification('success', 'Config Sauvegardée', 'Les paramètres de la plateforme ont été mis à jour.')}
+                         className="w-full py-4 bg-secondary text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-secondary/20 hover:scale-105 transition-all"
+                       >Mettre à jour la config</button>
                     </div>
                   </div>
                 </div>

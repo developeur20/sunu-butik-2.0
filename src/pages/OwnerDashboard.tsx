@@ -260,7 +260,10 @@ export default function OwnerDashboard() {
                   <div className="lg:col-span-2 bg-white p-8 rounded-[40px] border border-gray-100">
                     <div className="flex items-center justify-between mb-8">
                       <h3 className="text-lg font-bold">Performance du mois</h3>
-                      <button className="flex items-center gap-2 text-sm text-primary font-bold hover:underline">
+                      <button 
+                        onClick={() => showNotification('info', 'Export PDF', 'La génération du rapport PDF est en cours de préparation.')}
+                        className="flex items-center gap-2 text-sm text-primary font-bold hover:underline"
+                      >
                         Exporter PDF <Download className="w-4 h-4" />
                       </button>
                     </div>
@@ -339,7 +342,7 @@ export default function OwnerDashboard() {
                     </div>
                     <div className="flex items-center gap-2">
                        <button className="p-3 bg-white border border-gray-100 rounded-xl hover:bg-tris transition-all active:scale-95"><Filter className="w-5 h-5 text-gray-500" /></button>
-                       <button className="px-6 py-3 bg-white border border-gray-100 rounded-xl font-bold text-gray-500 flex items-center gap-2 hover:bg-tris transition-all"><FileText className="w-4 h-4" /> Exporter</button>
+                       <button onClick={() => showNotification('info', 'Export Data', 'L\'exportation des données CSV est en cours...') } className="px-6 py-3 bg-white border border-gray-100 rounded-xl font-bold text-gray-500 flex items-center gap-2 hover:bg-tris transition-all"><FileText className="w-4 h-4" /> Exporter</button>
                     </div>
                  </div>
 
@@ -709,7 +712,10 @@ export default function OwnerDashboard() {
                        >
                          <Plus className="w-5 h-5" /> Nouvelle Dépense
                        </button>
-                       <button className="px-6 py-3 bg-white border border-gray-100 text-secondary rounded-2xl font-bold hover:bg-tris transition-all">
+                       <button 
+                         onClick={() => showNotification('info', 'Versements', 'La programmation des versements sera disponible après vérification de votre compte.')}
+                         className="px-6 py-3 bg-white border border-gray-100 text-secondary rounded-2xl font-bold hover:bg-tris transition-all"
+                       >
                          Programmer un Versement
                        </button>
                     </div>

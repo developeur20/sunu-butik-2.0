@@ -5,7 +5,7 @@ import {
   Search, Filter, SlidersHorizontal, ChevronRight, TrendingUp, AlertTriangle, 
   ArrowUpRight, ArrowDownRight, Package, Archive, Clock, BarChart3,
   Calendar, Info, Edit, Trash2, RotateCcw, CheckCircle, XCircle, FileText, Download,
-  Menu, CreditCard, Store, Settings2, Wallet, Tag
+  Menu, CreditCard, Store, Settings2, Wallet, Tag, Bell, Trophy
 } from 'lucide-react';
 import { PLANS, PlanId, Product, Employee, ActivityLog } from '../types';
 import { useStore } from '../context/StoreContext';
@@ -18,6 +18,9 @@ import ShopSettings from '../components/dashboard/ShopSettings';
 import PaymentMethodsList from '../components/dashboard/PaymentMethodsList';
 import SubscriptionManager from '../components/dashboard/SubscriptionManager';
 import CategoryManager from '../components/dashboard/CategoryManager';
+import ReportsModule from '../components/dashboard/ReportsModule';
+import ChallengesModule from '../components/dashboard/ChallengesModule';
+import NotificationCenter from '../components/dashboard/NotificationCenter';
 import { useNotifications } from '../context/NotificationContext';
 
 export default function OwnerDashboard() {
@@ -32,11 +35,13 @@ export default function OwnerDashboard() {
 
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
 
   const { 
     currentUser, logout, subscriptions, products, employees, 
     activityLogs, categories, deleteProduct, archiveProduct, restoreProduct,
-    addCategory, restoreEmployee, archiveEmployee, updateEmployee
+    addCategory, restoreEmployee, archiveEmployee, updateEmployee,
+    notifications
   } = useStore();
 
   const handleEditEmployee = (emp: Employee) => {
@@ -124,9 +129,10 @@ export default function OwnerDashboard() {
   const sidebarItems = [
     { id: 'overview', label: 'Vue d\'ensemble', icon: LayoutDashboard },
     { id: 'inventory', label: 'Espace Produits', icon: Box },
+    { id: 'reports', label: 'Rapports & Analyses', icon: BarChart3 },
+    { id: 'challenges', label: 'Challenges Équipe', icon: Trophy },
     { id: 'categories', label: 'Gestion Rayons', icon: Tag },
     { id: 'shop', label: 'Ma Boutique', icon: Store },
-    { id: 'analysis', label: 'Analyses & Ventes', icon: BarChart3 },
     { id: 'employees', label: 'Collaborateurs', icon: Users },
     { id: 'expenses', label: 'Dépenses & Flux', icon: CreditCard },
     { id: 'payments', label: 'Moyens de Paiement', icon: Wallet },
@@ -209,9 +215,16 @@ export default function OwnerDashboard() {
                   className="bg-transparent border-none text-sm outline-none w-full" 
                 />
              </div>
-             <button className="p-2 bg-tris rounded-xl relative text-secondary hover:bg-primary hover:text-white transition-all">
-                <Mail className="w-5 h-5" />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border-2 border-white"></span>
+             <button 
+                onClick={() => setIsNotifOpen(true)}
+                className="p-2 bg-tris rounded-xl relative text-secondary hover:bg-primary hover:text-white transition-all group"
+             >
+                <Bell className="w-5 h-5 group-hover:animate-bounce" />
+                {notifications.filter(n => !n.isRead && n.userId === currentUser?.uid).length > 0 && (
+                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-[10px] font-black rounded-full border-2 border-white flex items-center justify-center">
+                      {notifications.filter(n => !n.isRead && n.userId === currentUser?.uid).length}
+                   </span>
+                )}
              </button>
              <div className="flex items-center gap-3 border-l pl-6 border-gray-100">
                <div className="text-right">
@@ -447,6 +460,13 @@ export default function OwnerDashboard() {
               <ShopSettings />
             )}
 
+            {activeTab === 'reports' && (
+              <ReportsModule />
+            )}
+
+            {activeTab === 'challenges' && (
+              <ChallengesModule />
+            )}
             {activeTab === 'analysis' && (
               <motion.div 
                 key="analysis"
@@ -859,6 +879,12 @@ export default function OwnerDashboard() {
           onSuccess={() => setIsEmployeeModalOpen(false)} 
         />
       </Modal>
+
+      {/* Notification Center */}
+      <NotificationCenter 
+        isOpen={isNotifOpen} 
+        onClose={() => setIsNotifOpen(false)} 
+      />
 
       {/* Expense Modal */}
       <Modal

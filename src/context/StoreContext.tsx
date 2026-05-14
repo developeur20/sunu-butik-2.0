@@ -1,5 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, Product, Subscription, Employee, Role, ActivityLog, Category, PLANS, ShopConfig, PaymentMethod, PlanId } from '../types';
+import { 
+  User, Product, Subscription, Employee, Role, ActivityLog, 
+  Category, PLANS, ShopConfig, PaymentMethod, PlanId,
+  Sale, Expense, Challenge, Notification, Report 
+} from '../types';
 
 interface StoreContextType {
   currentUser: User | null;
@@ -8,8 +12,17 @@ interface StoreContextType {
   employees: Employee[];
   activityLogs: ActivityLog[];
   categories: Category[];
+  sales: Sale[];
+  expenses: Expense[];
+  challenges: Challenge[];
+  notifications: Notification[];
+  reports: Report[];
+  allUsers: User[];
   login: (email: string, role: Role) => void;
   logout: () => void;
+  // User/Admin Operations
+  suspendUser: (uid: string) => void;
+  activateUser: (uid: string) => void;
   // User/Shop
   updateShopSettings: (settings: Partial<ShopConfig>) => void;
   // Payment Methods
@@ -31,6 +44,15 @@ interface StoreContextType {
   addCategory: (name: string, parentId?: string) => void;
   toggleCategory: (id: string, active: boolean) => void;
   updateCategory: (id: string, updates: Partial<Category>) => void;
+  // Sales & Expenses
+  addSale: (sale: Omit<Sale, 'id' | 'timestamp' | 'shopId'>) => void;
+  addExpense: (expense: Omit<Expense, 'id' | 'recordedBy' | 'shopId'>) => void;
+  // Challenges
+  addChallenge: (challenge: Omit<Challenge, 'id' | 'shopId' | 'status'>) => void;
+  updateChallengeStatus: (id: string, status: Challenge['status'], winners?: string[]) => void;
+  // Notifications
+  addNotification: (userId: string, notif: Omit<Notification, 'id' | 'timestamp' | 'isRead' | 'userId'>) => void;
+  markNotificationRead: (id: string) => void;
   // Subscriptions
   updateSubscription: (userId: string, planId: PlanId, months?: number, cycle?: 'monthly' | 'yearly') => void;
   extendSubscription: (userId: string, months: number) => void;
@@ -46,6 +68,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [reports, setReports] = useState<Report[]>([]);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const [categories, setCategories] = useState<Category[]>([
     { id: '1', name: 'Téléphones', count: 0 },
     { id: '2', name: 'Informatique', count: 0 },
@@ -60,6 +88,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const savedEmployees = localStorage.getItem('sb2_employees');
     const savedLogs = localStorage.getItem('sb2_logs');
     const savedCats = localStorage.getItem('sb2_categories');
+    const savedSales = localStorage.getItem('sb2_sales');
+    const savedExpenses = localStorage.getItem('sb2_expenses');
+    const savedChallenges = localStorage.getItem('sb2_challenges');
+    const savedNotifs = localStorage.getItem('sb2_notifications');
+    const savedAllUsers = localStorage.getItem('sb2_all_users');
 
     if (savedUser) setCurrentUser(JSON.parse(savedUser));
     if (savedProducts) setProducts(JSON.parse(savedProducts));
@@ -67,6 +100,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (savedEmployees) setEmployees(JSON.parse(savedEmployees));
     if (savedLogs) setActivityLogs(JSON.parse(savedLogs));
     if (savedCats) setCategories(JSON.parse(savedCats));
+    if (savedSales) setSales(JSON.parse(savedSales));
+    if (savedExpenses) setExpenses(JSON.parse(savedExpenses));
+    if (savedChallenges) setChallenges(JSON.parse(savedChallenges));
+    if (savedNotifs) setNotifications(JSON.parse(savedNotifs));
+    
+    if (savedAllUsers) {
+      setAllUsers(JSON.parse(savedAllUsers));
+    } else {
+      // Seed with some users if empty
+      const initialUsers: User[] = [
+        { uid: 'admin-001', email: 'admin@sunubutik.com', displayName: 'Master Admin', role: 'admin', createdAt: new Date().toISOString(), isActive: true }
+      ];
+      setAllUsers(initialUsers);
+    }
   }, []);
 
   // Sync to localStorage
@@ -80,6 +127,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => { localStorage.setItem('sb2_employees', JSON.stringify(employees)); }, [employees]);
   useEffect(() => { localStorage.setItem('sb2_logs', JSON.stringify(activityLogs)); }, [activityLogs]);
   useEffect(() => { localStorage.setItem('sb2_categories', JSON.stringify(categories)); }, [categories]);
+  useEffect(() => { localStorage.setItem('sb2_sales', JSON.stringify(sales)); }, [sales]);
+  useEffect(() => { localStorage.setItem('sb2_expenses', JSON.stringify(expenses)); }, [expenses]);
+  useEffect(() => { localStorage.setItem('sb2_challenges', JSON.stringify(challenges)); }, [challenges]);
+  useEffect(() => { localStorage.setItem('sb2_notifications', JSON.stringify(notifications)); }, [notifications]);
+  useEffect(() => { localStorage.setItem('sb2_all_users', JSON.stringify(allUsers)); }, [allUsers]);
 
   const addLog = (logData: Omit<ActivityLog, 'id' | 'timestamp' | 'userId' | 'userName'>) => {
     if (!currentUser) return;
@@ -94,15 +146,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const login = (email: string, role: Role) => {
-    const newUser: User = {
-      uid: Math.random().toString(36).substr(2, 9),
-      email,
-      displayName: email.split('@')[0],
-      role,
-      createdAt: new Date().toISOString()
-    };
-    setCurrentUser(newUser);
-    // Explicitly add log for login if needed, or just let it be
+    // Check if user already exists
+    let existingUser = allUsers.find(u => u.email === email);
+    
+    if (!existingUser) {
+      existingUser = {
+        uid: Math.random().toString(36).substr(2, 9),
+        email,
+        displayName: email.split('@')[0],
+        role,
+        createdAt: new Date().toISOString(),
+        isActive: true
+      };
+      setAllUsers(prev => [...prev, existingUser!]);
+    }
+
+    if (!existingUser.isActive) {
+      throw new Error("Votre compte est actuellement suspendu. Veuillez contacter l'administration.");
+    }
+
+    setCurrentUser(existingUser);
   };
 
   const updateShopSettings = (settings: Partial<ShopConfig>) => {
@@ -173,6 +236,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const logout = () => {
     setCurrentUser(null);
+  };
+
+  const suspendUser = (uid: string) => {
+    setAllUsers(prev => prev.map(u => u.uid === uid ? { ...u, isActive: false } : u));
+  };
+
+  const activateUser = (uid: string) => {
+    setAllUsers(prev => prev.map(u => u.uid === uid ? { ...u, isActive: true } : u));
   };
 
   // Product Operations
@@ -305,6 +376,67 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCategories(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
   };
 
+  // Sales & Expenses
+  const addSale = (saleData: Omit<Sale, 'id' | 'timestamp' | 'shopId'>) => {
+    if (!currentUser) return;
+    const newSale: Sale = {
+      ...saleData,
+      id: Math.random().toString(36).substr(2, 9),
+      shopId: currentUser.uid,
+      timestamp: new Date().toISOString()
+    };
+    setSales(prev => [...prev, newSale]);
+    addLog({
+      action: 'create',
+      entityType: 'shop', // Using shop for general sales
+      entityId: newSale.id,
+      details: `Vente de ${newSale.total} FCFA enregistrée.`
+    });
+  };
+
+  const addExpense = (expenseData: Omit<Expense, 'id' | 'recordedBy' | 'shopId'>) => {
+    if (!currentUser) return;
+    const newExpense: Expense = {
+      ...expenseData,
+      id: Math.random().toString(36).substr(2, 9),
+      recordedBy: currentUser.displayName,
+      shopId: currentUser.uid
+    };
+    setExpenses(prev => [...prev, newExpense]);
+  };
+
+  // Challenges
+  const addChallenge = (challengeData: Omit<Challenge, 'id' | 'shopId' | 'status'>) => {
+    if (!currentUser) return;
+    const newChallenge: Challenge = {
+      ...challengeData,
+      id: Math.random().toString(36).substr(2, 9),
+      shopId: currentUser.uid,
+      status: 'active'
+    };
+    setChallenges(prev => [...prev, newChallenge]);
+  };
+
+  const updateChallengeStatus = (id: string, status: Challenge['status'], winners?: string[]) => {
+    setChallenges(prev => prev.map(c => c.id === id ? { ...c, status, winners } : c));
+  };
+
+  // Notifications
+  const addNotification = (userId: string, notif: Omit<Notification, 'id' | 'timestamp' | 'isRead' | 'userId'>) => {
+    const newNotif: Notification = {
+      ...notif,
+      id: Math.random().toString(36).substr(2, 9),
+      userId,
+      timestamp: new Date().toISOString(),
+      isRead: false
+    };
+    setNotifications(prev => [newNotif, ...prev]);
+  };
+
+  const markNotificationRead = (id: string) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+  };
+
   const updateSubscription = (userId: PlanId | string, planId: PlanId, months: number = 1, cycle: 'monthly' | 'yearly' = 'monthly') => {
     const plan = PLANS[planId];
     const startDate = new Date();
@@ -382,9 +514,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   return (
     <StoreContext.Provider value={{ 
       currentUser, products, subscriptions, employees, activityLogs, categories,
-      login, logout, addProduct, updateProduct, deleteProduct, archiveProduct, restoreProduct,
+      sales, expenses, challenges, notifications, reports, allUsers,
+      login, logout, suspendUser, activateUser, addProduct, updateProduct, deleteProduct, archiveProduct, restoreProduct,
       addEmployee, updateEmployee, archiveEmployee, restoreEmployee,
-      addCategory, toggleCategory, updateCategory, updateSubscription, extendSubscription, addLog,
+      addCategory, toggleCategory, updateCategory, 
+      addSale, addExpense, addChallenge, updateChallengeStatus, addNotification, markNotificationRead,
+      updateSubscription, extendSubscription, addLog,
       updateShopSettings, addPaymentMethod, updatePaymentMethod, deletePaymentMethod
     }}>
       {children}

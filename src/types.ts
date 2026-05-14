@@ -40,6 +40,7 @@ export interface User {
   shopConfig?: ShopConfig;
   paymentMethods?: PaymentMethod[];
   createdAt: string;
+  isActive: boolean;
 }
 
 export interface ActivityLog {
@@ -118,6 +119,85 @@ export interface Employee {
   isArchived: boolean;
 }
 
+export interface Sale {
+  id: string;
+  shopId: string;
+  sellerId: string;
+  customerId?: string;
+  items: {
+    productId: string;
+    name: string;
+    quantity: number;
+    price: number;
+    buyPrice: number; // For profit calculation
+  }[];
+  total: number;
+  subTotal: number;
+  tax: number;
+  discount: number;
+  paymentMethod: string;
+  status: 'completed' | 'cancelled' | 'refunded';
+  timestamp: string;
+}
+
+export interface Expense {
+  id: string;
+  shopId: string;
+  category: string;
+  amount: number;
+  description: string;
+  date: string;
+  recordedBy: string;
+}
+
+export interface Challenge {
+  id: string;
+  shopId: string;
+  title: string;
+  description: string;
+  targetType: 'sales_count' | 'revenue' | 'new_customers';
+  targetValue: number;
+  reward: string;
+  startDate: string;
+  endDate: string;
+  participants: string[]; // employee ids
+  status: 'active' | 'completed' | 'cancelled';
+  winners?: string[];
+  rules: string[];
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  type: 'report' | 'challenge' | 'subscription' | 'payment' | 'security' | 'performance';
+  title: string;
+  message: string;
+  isRead: boolean;
+  timestamp: string;
+}
+
+export interface Report {
+  id: string;
+  shopId: string;
+  type: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  date: string;
+  data: {
+    revenue: number;
+    profit: number;
+    expenses: number;
+    salesCount: number;
+    topProducts: { id: string; name: string; count: number }[];
+    employeePerformance: { id: string; name: string; sales: number; revenue: number }[];
+  }
+}
+
+export interface SuperAdminStats {
+  totalShops: number;
+  activeSubscriptions: number;
+  totalRevenue: number;
+  newShopsThisMonth: number;
+}
+
 export interface Plan {
   id: PlanId;
   name: string;
@@ -125,6 +205,7 @@ export interface Plan {
   adminCount: number;
   employeeLimit: number;
   features: string[];
+  isActive: boolean; // For Super Admin to enable/disable plans
 }
 
 export const PLANS: Record<PlanId, Plan> = {
@@ -135,6 +216,7 @@ export const PLANS: Record<PlanId, Plan> = {
     adminCount: 1,
     employeeLimit: 1,
     features: ['1 compte administrateur', '1 compte employé', 'Publication limitée', 'Support standard', 'Boutique simple'],
+    isActive: true
   },
   standard: {
     id: 'standard',
@@ -143,6 +225,7 @@ export const PLANS: Record<PlanId, Plan> = {
     adminCount: 1,
     employeeLimit: 5,
     features: ['1 compte administrateur', 'Jusqu\'à 5 employés', 'Produits illimités', 'Support prioritaire', 'Promotions avancées', 'Tableau de bord amélioré'],
+    isActive: true
   },
   premium: {
     id: 'premium',
@@ -151,6 +234,7 @@ export const PLANS: Record<PlanId, Plan> = {
     adminCount: 1,
     employeeLimit: 15,
     features: ['1 compte administrateur', 'Jusqu\'à 15 employés', 'Boutique premium', 'Mise en avant auto', 'Multi utilisateurs', 'Statistiques avancées', 'Support VIP'],
+    isActive: true
   },
   business_pro: {
     id: 'business_pro',
@@ -159,5 +243,6 @@ export const PLANS: Record<PlanId, Plan> = {
     adminCount: 1,
     employeeLimit: Infinity,
     features: ['Comptes illimités', 'Marketplace professionnelle', 'Gestion multi boutiques', 'Accès API', 'Dashboard entreprise', 'Gestion équipes avancée', 'Priorité affichage'],
+    isActive: true
   },
 };

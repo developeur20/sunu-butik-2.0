@@ -135,7 +135,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, categorie
           <div className="grid grid-cols-4 gap-4">
              {images.map((url, i) => (
                 <div key={i} className="aspect-square rounded-2xl bg-gris relative group overflow-hidden border border-gray-100">
-                   <img src={url} alt="" className="w-full h-full object-cover" />
+                   <img src={url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                    <button 
                      type="button"
                      onClick={() => removeImage(i)}

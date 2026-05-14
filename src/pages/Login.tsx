@@ -25,19 +25,25 @@ export default function Login() {
   });
 
   const onSubmit = async (data: LoginForm) => {
-    // Mock authentication logic
-    console.log('Login attempt:', data);
-    
-    // Admin check
-    if (data.email === 'ngaryservicepro@gmail.com' && data.password === '123456789@') {
-      login(data.email, 'admin');
-      navigate('/admin');
-      return;
-    }
+    try {
+      console.log('Login attempt:', data);
+      
+      // Admin check
+      if (
+        (data.email === 'ngaryservicepro@gmail.com' && data.password === '123456789@') ||
+        (data.email === 'admin@sunubutik.com' && data.password === 'admin123456')
+      ) {
+        login(data.email, 'admin');
+        navigate('/admin');
+        return;
+      }
 
-    // Default simulation as Customer
-    login(data.email, 'customer');
-    navigate('/');
+      // Default simulation as Customer
+      login(data.email, 'customer');
+      navigate('/');
+    } catch (error: any) {
+      alert(error.message || "Une erreur est survenue lors de la connexion.");
+    }
   };
 
   return (

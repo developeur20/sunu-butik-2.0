@@ -176,15 +176,32 @@ export default function ChallengesModule() {
                   <h3 className="text-2xl font-black text-secondary tracking-tighter uppercase italic">Nouveau <span className="text-primary italic">Challenge</span></h3>
                   <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white rounded-xl transition-all"><X className="w-6 h-6 text-gray-400" /></button>
                </div>
-               <div className="p-10 space-y-8">
+               <form onSubmit={(e) => {
+                 e.preventDefault();
+                 const formData = new FormData(e.currentTarget);
+                 const pids = Array.from(formData.getAll('participants')) as string[];
+                 
+                 addChallenge({
+                   title: formData.get('title') as string,
+                   description: "Défi d'équipe pour booster la performance.",
+                   reward: formData.get('reward') as string,
+                   targetValue: Number(formData.get('targetValue')),
+                   currentValue: 0,
+                   startDate: new Date().toISOString(),
+                   endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                   participants: pids
+                 });
+                 
+                 setIsModalOpen(false);
+               }} className="p-10 space-y-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-2">
                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Titre du challenge</label>
-                         <input type="text" placeholder="Ex: Meilleur vendeur Mai" className="w-full px-5 py-4 bg-tris rounded-2xl border-none outline-none focus:ring-2 ring-primary/20 font-bold" />
+                         <input name="title" required type="text" placeholder="Ex: Meilleur vendeur Mai" className="w-full px-5 py-4 bg-tris rounded-2xl border-none outline-none focus:ring-2 ring-primary/20 font-bold" />
                       </div>
                       <div className="space-y-2">
                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Type d'objectif</label>
-                         <select className="w-full px-5 py-4 bg-tris rounded-2xl border-none outline-none focus:ring-2 ring-primary/20 font-bold">
+                         <select name="type" className="w-full px-5 py-4 bg-tris rounded-2xl border-none outline-none focus:ring-2 ring-primary/20 font-bold">
                             <option>Chiffre d'Affaires</option>
                             <option>Nombre de ventes</option>
                             <option>Nouveaux clients</option>
@@ -192,11 +209,11 @@ export default function ChallengesModule() {
                       </div>
                       <div className="space-y-2">
                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Valeur cible à atteindre</label>
-                         <input type="number" placeholder="Ex: 500000" className="w-full px-5 py-4 bg-tris rounded-2xl border-none outline-none focus:ring-2 ring-primary/20 font-bold" />
+                         <input name="targetValue" required type="number" placeholder="Ex: 500000" className="w-full px-5 py-4 bg-tris rounded-2xl border-none outline-none focus:ring-2 ring-primary/20 font-bold" />
                       </div>
                       <div className="space-y-2">
                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Récompense / Prime</label>
-                         <input type="text" placeholder="Ex: 10.000 F cash" className="w-full px-5 py-4 bg-tris rounded-2xl border-none outline-none focus:ring-2 ring-primary/20 font-bold" />
+                         <input name="reward" required type="text" placeholder="Ex: 10.000 F cash" className="w-full px-5 py-4 bg-tris rounded-2xl border-none outline-none focus:ring-2 ring-primary/20 font-bold" />
                       </div>
                   </div>
                   
@@ -207,7 +224,7 @@ export default function ChallengesModule() {
                            <div key={emp.id} className="flex items-center gap-3 px-4 py-2 bg-white rounded-xl border border-gray-100 cursor-pointer hover:border-primary transition-all">
                               <div className="w-6 h-6 brand-gradient rounded-lg text-white font-black text-[8px] flex items-center justify-center">{emp.name[0]}</div>
                               <span className="text-xs font-bold text-secondary">{emp.name}</span>
-                              <input type="checkbox" defaultChecked />
+                              <input type="checkbox" name="participants" value={emp.id} defaultChecked />
                            </div>
                          ))}
                          {myEmployees.length === 0 && <p className="text-xs text-info italic">Aucun employé disponible. Recrutez d'abord.</p>}
@@ -215,9 +232,9 @@ export default function ChallengesModule() {
                   </div>
 
                   <div className="flex justify-end gap-4 pt-4">
-                     <button className="px-8 py-4 bg-secondary text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-secondary/20">Lancer le challenge</button>
+                     <button type="submit" className="px-8 py-4 bg-secondary text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-secondary/20">Lancer le challenge</button>
                   </div>
-               </div>
+               </form>
             </motion.div>
           </div>
         )}

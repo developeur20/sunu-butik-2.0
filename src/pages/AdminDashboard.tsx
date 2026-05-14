@@ -7,7 +7,7 @@ import {
   Search, Bell, LogOut, LayoutDashboard, Layers, Star, ShoppingBag,
   ArrowUpRight, ArrowDownRight, Clock, CheckCircle, ShieldCheck,
   Store, AlertTriangle, PlayCircle, PauseCircle, Trophy, Percent,
-  Gift, Save, Plus, Zap
+  Gift, Save, Plus, Zap, Download, Smartphone
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { PLANS, Product, Subscription, ActivityLog, User, PlanId } from '../types';
@@ -15,7 +15,7 @@ import { PLANS, Product, Subscription, ActivityLog, User, PlanId } from '../type
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const { products, subscriptions, currentUser, logout, activityLogs, allUsers, suspendUser, activateUser } = useStore();
+  const { products, subscriptions, currentUser, logout, activityLogs, allUsers, suspendUser, activateUser, transactions } = useStore();
   const navigate = useNavigate();
 
   const platformUsers = useMemo(() => allUsers.filter(u => u.role === 'owner' || u.role === 'customer'), [allUsers]);
@@ -26,13 +26,14 @@ export default function AdminDashboard() {
   };
 
   const totalRevenue = useMemo(() => {
-    return subscriptions.reduce((acc, sub) => acc + PLANS[sub.planId].price, 0);
-  }, [subscriptions]);
+    return transactions.reduce((acc, trans) => acc + trans.amount, 0);
+  }, [transactions]);
 
   const sidebarItems = [
     { id: 'overview', label: 'Vue d\'ensemble', icon: LayoutDashboard },
     { id: 'sellers', label: 'Boutiques', icon: Store },
     { id: 'subscriptions', label: 'Offres & Tarifs', icon: Star },
+    { id: 'finances', label: 'Finances & Paiements', icon: DollarSign },
     { id: 'global-challenges', label: 'Challenges Globaux', icon: Trophy },
     { id: 'activity', label: 'Logs Système', icon: Clock },
     { id: 'settings', label: 'Paramètres Plateforme', icon: Settings },
@@ -298,6 +299,84 @@ export default function AdminDashboard() {
                      </table>
                   </div>
                 </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'finances' && (
+              <motion.div 
+                key="finances"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8"
+              >
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <StatCard label="Chiffre d'Affaires" value={`${totalRevenue.toLocaleString()} F`} change="+22%" icon={DollarSign} color="green" />
+                    <StatCard label="Transactions" value={transactions.length.toString()} change="+10%" icon={CreditCard} color="blue" />
+                    <StatCard label="Commission Moy." value="2.5%" change="Fixe" icon={Percent} color="indigo" />
+                 </div>
+
+                 <div className="bg-white rounded-[40px] border border-gray-100 overflow-hidden shadow-sm">
+                    <div className="p-8 border-b border-gray-50 flex items-center justify-between">
+                       <h3 className="text-xl font-bold text-secondary">Journal des Paiements</h3>
+                       <div className="flex gap-2">
+                          <button className="px-4 py-2 bg-tris rounded-xl text-xs font-black uppercase tracking-widest text-secondary hover:bg-gris transition-all flex items-center gap-2">
+                             <Download className="w-4 h-4" /> Exporter PDF
+                          </button>
+                       </div>
+                    </div>
+                    <div className="overflow-x-auto">
+                       <table className="w-full text-left">
+                          <thead className="bg-tris/50 border-b border-gray-50">
+                             <tr>
+                                <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">ID Trans.</th>
+                                <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Client / Boutique</th>
+                                <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Montant</th>
+                                <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Méthode</th>
+                                <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Statut</th>
+                                <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Date</th>
+                             </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-50">
+                             {transactions.map(t => {
+                                const user = allUsers.find(u => u.uid === t.userId);
+                                return (
+                                   <tr key={t.id} className="hover:bg-tris/30 transition-all">
+                                      <td className="px-8 py-5 text-xs font-mono text-gray-400">{t.id}</td>
+                                      <td className="px-8 py-5">
+                                         <p className="text-sm font-bold text-secondary">{user?.displayName || 'Inconnu'}</p>
+                                         <p className="text-[10px] text-gray-400">{user?.email}</p>
+                                      </td>
+                                      <td className="px-8 py-5 text-sm font-black text-secondary">{t.amount.toLocaleString()} F</td>
+                                      <td className="px-8 py-5">
+                                         <div className="flex items-center gap-2">
+                                            {t.paymentMethod === 'card' ? <CreditCard className="w-4 h-4 text-gray-400" /> : <Smartphone className="w-4 h-4 text-gray-400" />}
+                                            <span className="text-[10px] font-bold uppercase tracking-tighter text-gray-500">
+                                               {t.paymentMethod === 'card' ? 'Carte Bancaire' : 'Google Pay'}
+                                            </span>
+                                         </div>
+                                      </td>
+                                      <td className="px-8 py-5">
+                                         <span className={`px-3 py-1 text-[8px] font-black rounded-full uppercase tracking-widest ${
+                                            t.status === 'completed' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                                         }`}>
+                                            {t.status === 'completed' ? 'Validé' : 'Echoué'}
+                                         </span>
+                                      </td>
+                                      <td className="px-8 py-5 text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                                         {new Date(t.timestamp).toLocaleString()}
+                                      </td>
+                                   </tr>
+                                );
+                             })}
+                             {transactions.length === 0 && (
+                                <tr>
+                                   <td colSpan={6} className="py-20 text-center text-gray-400 italic">Aucun encaissement enregistré ce mois-ci.</td>
+                                </tr>
+                             )}
+                          </tbody>
+                       </table>
+                    </div>
+                 </div>
               </motion.div>
             )}
 

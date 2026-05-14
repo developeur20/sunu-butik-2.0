@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   Star, Calendar, CreditCard, ChevronRight, CheckCircle, 
-  AlertCircle, History, Zap, ShieldCheck, Clock
+  AlertCircle, History, Zap, ShieldCheck, Clock, X
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
-import { useNotifications } from '../../context/NotificationContext';
 import { PLANS, PlanId } from '../../types';
+import PaymentSpace from './PaymentSpace';
 
 export default function SubscriptionManager() {
-  const { currentUser, subscriptions, updateSubscription, extendSubscription } = useStore();
-  const { showNotification } = useNotifications();
+  const { currentUser, subscriptions } = useStore();
   const [selectedPlan, setSelectedPlan] = useState<PlanId>(currentUser?.subscriptionId ? (subscriptions.find(s => s.id === currentUser.subscriptionId)?.planId || 'basic') : 'basic');
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [duration, setDuration] = useState(1);
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 
   const sub = subscriptions.find(s => s.userId === currentUser?.uid);
   const plan = PLANS[selectedPlan];
@@ -20,13 +21,7 @@ export default function SubscriptionManager() {
   const totalPrice = plan.price * duration * (billingCycle === 'yearly' ? 10 : 1);
 
   const handlePay = () => {
-    if (sub) {
-      extendSubscription(currentUser!.uid, duration);
-      showNotification('success', 'Abonnement prolongé', `Votre boutique est active pour encore ${duration} ${billingCycle === 'yearly' ? 'an(s)' : 'mois'}.`);
-    } else {
-      updateSubscription(currentUser!.uid, selectedPlan, duration, billingCycle);
-      showNotification('success', 'Plan activé', 'Bienvenue dans votre nouvel espace premium.');
-    }
+    setIsPaymentOpen(true);
   };
 
   const isExpired = sub ? new Date(sub.endDate) < new Date() : false;
@@ -198,6 +193,38 @@ export default function SubscriptionManager() {
            </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {isPaymentOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-secondary/80 backdrop-blur-2xl"
+              onClick={() => setIsPaymentOpen(false)}
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white w-full max-w-2xl rounded-[48px] shadow-2xl relative overflow-hidden z-10"
+            >
+              <button 
+                onClick={() => setIsPaymentOpen(false)}
+                className="absolute top-8 right-8 p-3 bg-tris rounded-2xl text-gray-400 hover:text-secondary transition-all z-20"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              <PaymentSpace 
+                planId={selectedPlan} 
+                onSuccess={() => setIsPaymentOpen(false)} 
+                onClose={() => setIsPaymentOpen(false)} 
+              />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

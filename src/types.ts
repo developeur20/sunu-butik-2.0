@@ -119,6 +119,16 @@ export interface Employee {
   isArchived: boolean;
 }
 
+export interface Transaction {
+  id: string;
+  userId: string;
+  amount: number;
+  planId: PlanId;
+  status: 'completed' | 'pending' | 'failed';
+  paymentMethod: 'card' | 'google_pay';
+  timestamp: string;
+}
+
 export interface Sale {
   id: string;
   shopId: string;

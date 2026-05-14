@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
   User, Product, Subscription, Employee, Role, ActivityLog, 
   Category, PLANS, ShopConfig, PaymentMethod, PlanId,
-  Sale, Expense, Challenge, Notification, Report 
+  Sale, Expense, Challenge, Notification, Report, Transaction 
 } from '../types';
 
 interface StoreContextType {
@@ -18,6 +18,7 @@ interface StoreContextType {
   notifications: Notification[];
   reports: Report[];
   allUsers: User[];
+  transactions: Transaction[];
   login: (email: string, role: Role) => void;
   logout: () => void;
   // User/Admin Operations
@@ -53,6 +54,8 @@ interface StoreContextType {
   // Notifications
   addNotification: (userId: string, notif: Omit<Notification, 'id' | 'timestamp' | 'isRead' | 'userId'>) => void;
   markNotificationRead: (id: string) => void;
+  // Transactions
+  addTransaction: (transaction: Omit<Transaction, 'id' | 'timestamp'>) => void;
   // Subscriptions
   updateSubscription: (userId: string, planId: PlanId, months?: number, cycle?: 'monthly' | 'yearly') => void;
   extendSubscription: (userId: string, months: number) => void;
@@ -74,6 +77,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([
     { id: '1', name: 'Téléphones', count: 0 },
     { id: '2', name: 'Informatique', count: 0 },
@@ -132,6 +136,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => { localStorage.setItem('sb2_challenges', JSON.stringify(challenges)); }, [challenges]);
   useEffect(() => { localStorage.setItem('sb2_notifications', JSON.stringify(notifications)); }, [notifications]);
   useEffect(() => { localStorage.setItem('sb2_all_users', JSON.stringify(allUsers)); }, [allUsers]);
+  useEffect(() => { localStorage.setItem('sb2_transactions', JSON.stringify(transactions)); }, [transactions]);
 
   const addLog = (logData: Omit<ActivityLog, 'id' | 'timestamp' | 'userId' | 'userName'>) => {
     if (!currentUser) return;
@@ -437,6 +442,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
   };
 
+  const addTransaction = (transactionData: Omit<Transaction, 'id' | 'timestamp'>) => {
+    const newTransaction: Transaction = {
+      ...transactionData,
+      id: Math.random().toString(36).substr(2, 9),
+      timestamp: new Date().toISOString()
+    };
+    setTransactions(prev => [newTransaction, ...prev]);
+  };
+
   const updateSubscription = (userId: PlanId | string, planId: PlanId, months: number = 1, cycle: 'monthly' | 'yearly' = 'monthly') => {
     const plan = PLANS[planId];
     const startDate = new Date();
@@ -514,12 +528,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   return (
     <StoreContext.Provider value={{ 
       currentUser, products, subscriptions, employees, activityLogs, categories,
-      sales, expenses, challenges, notifications, reports, allUsers,
+      sales, expenses, challenges, notifications, reports, allUsers, transactions,
       login, logout, suspendUser, activateUser, addProduct, updateProduct, deleteProduct, archiveProduct, restoreProduct,
       addEmployee, updateEmployee, archiveEmployee, restoreEmployee,
       addCategory, toggleCategory, updateCategory, 
       addSale, addExpense, addChallenge, updateChallengeStatus, addNotification, markNotificationRead,
-      updateSubscription, extendSubscription, addLog,
+      addTransaction, updateSubscription, extendSubscription, addLog,
       updateShopSettings, addPaymentMethod, updatePaymentMethod, deletePaymentMethod
     }}>
       {children}

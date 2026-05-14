@@ -1,0 +1,14 @@
+{
+  "name": "SUNU BUTIK 2.0",
+  "description": "Une plateforme e-commerce moderne et complète, incluant gestion de produits, abonnements premium, gestion d'équipes et un dashboard administrateur sécurisé.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "e-commerce",
+    "subscription-system",
+    "team-management"
+  ]
+}

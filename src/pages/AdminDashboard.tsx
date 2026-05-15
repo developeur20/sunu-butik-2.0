@@ -7,7 +7,7 @@ import {
   Search, Bell, LogOut, LayoutDashboard, Layers, Star, ShoppingBag,
   ArrowUpRight, ArrowDownRight, Clock, CheckCircle, ShieldCheck,
   Store, AlertTriangle, PlayCircle, PauseCircle, Trophy, Percent,
-  Gift, Save, Plus, Zap, Download, Smartphone, Facebook, Instagram, Twitter, Youtube, MessageCircle, MapPin
+  Gift, Save, Plus, Zap, Download, Smartphone, Facebook, Instagram, Twitter, Youtube, MessageCircle, MapPin, Globe, Phone, Mail
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { PLANS, Product, Subscription, ActivityLog, User, PlanId } from '../types';
@@ -21,6 +21,14 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
 
   const platformUsers = useMemo(() => allUsers.filter(u => u.role === 'owner' || u.role === 'customer'), [allUsers]);
+  const [isNewAccountModalOpen, setIsNewAccountModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedGatewayType, setSelectedGatewayType] = useState('wave');
+
+  const paymentGateways = [
+    { id: '1', type: 'wave', provider: 'Wave Senegal', accountName: 'SUNU BUTIK SARL', accountNumber: '+221 77 000 00 00', status: 'active' },
+    { id: '2', type: 'card', provider: 'Visa / Mastercard', accountName: 'SUNU BUTIK Bourse', accountNumber: '**** 4422', status: 'active' },
+  ];
 
   const handleLogout = () => {
     logout();
@@ -227,6 +235,12 @@ export default function AdminDashboard() {
                         <p className="text-sm text-gray-500 mt-1">Supervisez et gérez tous les boutiquiers enregistrés.</p>
                     </div>
                     <div className="flex gap-3">
+                        <button 
+                          onClick={() => setIsNewAccountModalOpen(true)}
+                          className="px-6 py-2 brand-gradient text-white rounded-xl text-sm font-black uppercase tracking-widest flex items-center gap-2 hover:scale-105 transition-all shadow-lg shadow-primary/20"
+                        >
+                          <Plus className="w-4 h-4" /> Nouveau Compte
+                        </button>
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input type="text" placeholder="Rechercher une boutique..." className="pl-10 pr-4 py-2 bg-gris rounded-xl text-sm outline-none focus:ring-2 ring-primary/20 transition-all border-none" />
@@ -311,74 +325,115 @@ export default function AdminDashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-8"
               >
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <StatCard label="Chiffre d'Affaires" value={`${totalRevenue.toLocaleString()} F`} change="+22%" icon={DollarSign} color="green" />
-                    <StatCard label="Transactions" value={transactions.length.toString()} change="+10%" icon={CreditCard} color="blue" />
-                    <StatCard label="Commission Moy." value="2.5%" change="Fixe" icon={Percent} color="indigo" />
-                 </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <StatCard label="Chiffre d'Affaires" value={`${totalRevenue.toLocaleString()} F`} change="+22%" icon={DollarSign} color="green" />
+            <StatCard label="Transactions" value={transactions.length.toString()} change="+10%" icon={CreditCard} color="blue" />
+            <StatCard label="Commission Moy." value="2.5%" change="Fixe" icon={Percent} color="indigo" />
+          </div>
 
-                 <div className="bg-white rounded-[40px] border border-gray-100 overflow-hidden shadow-sm">
-                    <div className="p-8 border-b border-gray-50 flex items-center justify-between">
-                       <h3 className="text-xl font-bold text-secondary">Journal des Paiements</h3>
-                       <div className="flex gap-2">
-                          <button className="px-4 py-2 bg-tris rounded-xl text-xs font-black uppercase tracking-widest text-secondary hover:bg-gris transition-all flex items-center gap-2">
-                             <Download className="w-4 h-4" /> Exporter PDF
-                          </button>
-                       </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 bg-white rounded-[40px] border border-gray-100 overflow-hidden shadow-sm">
+              <div className="p-8 border-b border-gray-50 flex items-center justify-between">
+                <h3 className="text-xl font-bold text-secondary">Journal des Paiements</h3>
+                <div className="flex gap-2">
+                  <button className="px-4 py-2 bg-tris rounded-xl text-xs font-black uppercase tracking-widest text-secondary hover:bg-gris transition-all flex items-center gap-2">
+                    <Download className="w-4 h-4" /> Exporter PDF
+                  </button>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-tris/50 border-b border-gray-50">
+                    <tr>
+                      <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">ID Trans.</th>
+                      <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Client / Boutique</th>
+                      <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Montant</th>
+                      <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Méthode</th>
+                      <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Statut</th>
+                      <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {transactions.map(t => {
+                      const user = allUsers.find(u => u.uid === t.userId);
+                      return (
+                        <tr key={t.id} className="hover:bg-tris/30 transition-all">
+                          <td className="px-8 py-5 text-xs font-mono text-gray-400">{t.id}</td>
+                          <td className="px-8 py-5">
+                            <p className="text-sm font-bold text-secondary">{user?.displayName || 'Inconnu'}</p>
+                            <p className="text-[10px] text-gray-400">{user?.email}</p>
+                          </td>
+                          <td className="px-8 py-5 text-sm font-black text-secondary">{t.amount.toLocaleString()} F</td>
+                          <td className="px-8 py-5">
+                            <div className="flex items-center gap-2">
+                              {t.paymentMethod === 'card' ? <CreditCard className="w-4 h-4 text-gray-400" /> : <Smartphone className="w-4 h-4 text-gray-400" />}
+                              <span className="text-[10px] font-bold uppercase tracking-tighter text-gray-500">
+                                {t.paymentMethod === 'card' ? 'Carte Bancaire' : 'Google Pay'}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-8 py-5">
+                            <span className={`px-3 py-1 text-[8px] font-black rounded-full uppercase tracking-widest ${
+                              t.status === 'completed' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                            }`}>
+                              {t.status === 'completed' ? 'Validé' : 'Echoué'}
+                            </span>
+                          </td>
+                          <td className="px-8 py-5 text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                            {new Date(t.timestamp).toLocaleString()}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {transactions.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="py-20 text-center text-gray-400 italic">Aucun encaissement enregistré ce mois-ci.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm h-fit">
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-lg font-black text-secondary uppercase tracking-tight">Moyens d'Encaissement</h3>
+                <button 
+                  onClick={() => setIsPaymentModalOpen(true)}
+                  className="p-2 bg-primary text-white rounded-xl hover:scale-105 transition-all shadow-lg shadow-primary/20"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {paymentGateways.map((gate) => (
+                  <div key={gate.id} className="p-5 bg-tris rounded-3xl border border-gray-50 group hover:border-primary/30 transition-all">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-10 h-10 brand-gradient rounded-xl flex items-center justify-center text-white flex-shrink-0">
+                        {gate.type === 'wave' ? <Smartphone className="w-5 h-5" /> : <CreditCard className="w-5 h-5" />}
+                      </div>
+                      <div>
+                        <p className="text-sm font-black text-secondary uppercase tracking-tighter">{gate.provider}</p>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase">{gate.accountName}</p>
+                      </div>
+                      <div className="ml-auto">
+                        <span className="px-2 py-1 bg-green-50 text-green-600 text-[8px] font-black rounded-full uppercase">Actif</span>
+                      </div>
                     </div>
-                    <div className="overflow-x-auto">
-                       <table className="w-full text-left">
-                          <thead className="bg-tris/50 border-b border-gray-50">
-                             <tr>
-                                <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">ID Trans.</th>
-                                <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Client / Boutique</th>
-                                <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Montant</th>
-                                <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Méthode</th>
-                                <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Statut</th>
-                                <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Date</th>
-                             </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-50">
-                             {transactions.map(t => {
-                                const user = allUsers.find(u => u.uid === t.userId);
-                                return (
-                                   <tr key={t.id} className="hover:bg-tris/30 transition-all">
-                                      <td className="px-8 py-5 text-xs font-mono text-gray-400">{t.id}</td>
-                                      <td className="px-8 py-5">
-                                         <p className="text-sm font-bold text-secondary">{user?.displayName || 'Inconnu'}</p>
-                                         <p className="text-[10px] text-gray-400">{user?.email}</p>
-                                      </td>
-                                      <td className="px-8 py-5 text-sm font-black text-secondary">{t.amount.toLocaleString()} F</td>
-                                      <td className="px-8 py-5">
-                                         <div className="flex items-center gap-2">
-                                            {t.paymentMethod === 'card' ? <CreditCard className="w-4 h-4 text-gray-400" /> : <Smartphone className="w-4 h-4 text-gray-400" />}
-                                            <span className="text-[10px] font-bold uppercase tracking-tighter text-gray-500">
-                                               {t.paymentMethod === 'card' ? 'Carte Bancaire' : 'Google Pay'}
-                                            </span>
-                                         </div>
-                                      </td>
-                                      <td className="px-8 py-5">
-                                         <span className={`px-3 py-1 text-[8px] font-black rounded-full uppercase tracking-widest ${
-                                            t.status === 'completed' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-                                         }`}>
-                                            {t.status === 'completed' ? 'Validé' : 'Echoué'}
-                                         </span>
-                                      </td>
-                                      <td className="px-8 py-5 text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                                         {new Date(t.timestamp).toLocaleString()}
-                                      </td>
-                                   </tr>
-                                );
-                             })}
-                             {transactions.length === 0 && (
-                                <tr>
-                                   <td colSpan={6} className="py-20 text-center text-gray-400 italic">Aucun encaissement enregistré ce mois-ci.</td>
-                                </tr>
-                             )}
-                          </tbody>
-                       </table>
+                    <div className="flex items-center justify-between">
+                      <code className="text-xs font-mono font-bold text-primary">{gate.accountNumber}</code>
+                      <button className="text-[8px] font-black uppercase text-gray-400 hover:text-red-500 transition-colors">Désactiver</button>
                     </div>
-                 </div>
+                  </div>
+                ))}
+                <div className="p-6 border-2 border-dashed border-gray-100 rounded-[32px] flex flex-col items-center justify-center text-center opacity-60 hover:opacity-100 transition-all cursor-pointer" onClick={() => setIsPaymentModalOpen(true)}>
+                  <Plus className="w-6 h-6 text-gray-300 mb-2" />
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Ajouter une passerelle</p>
+                </div>
+              </div>
+            </div>
+          </div>
               </motion.div>
             )}
 
@@ -723,6 +778,171 @@ export default function AdminDashboard() {
           </AnimatePresence>
         </main>
       </div>
+
+      {/* New Account Modal */}
+      <AnimatePresence>
+        {isNewAccountModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-secondary/80 backdrop-blur-sm"
+              onClick={() => setIsNewAccountModalOpen(false)}
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white w-full max-w-lg rounded-[48px] shadow-2xl relative overflow-hidden z-10 p-10"
+            >
+              <button 
+                onClick={() => setIsNewAccountModalOpen(false)}
+                className="absolute top-8 right-8 p-3 bg-tris rounded-2xl text-gray-400 hover:text-secondary transition-all"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              <div className="mb-10 text-center">
+                <div className="w-20 h-20 brand-gradient rounded-3xl flex items-center justify-center text-white mx-auto mb-6 shadow-xl shadow-primary/20">
+                   <UserPlus className="w-10 h-10" />
+                </div>
+                <h3 className="text-3xl font-black text-secondary tracking-tighter uppercase">Nouveau Compte</h3>
+                <p className="text-gray-500 mt-2">Créez un accès privilégié pour un vendeur ou un admin.</p>
+              </div>
+
+              <form className="space-y-6" onSubmit={(e) => {
+                e.preventDefault();
+                showNotification('success', 'Compte Créé', 'L\'invitation a été envoyée par email au nouvel utilisateur.');
+                setIsNewAccountModalOpen(false);
+              }}>
+                <div className="grid grid-cols-2 gap-4">
+                   <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Prénom / Nom</label>
+                      <input type="text" required className="w-full px-5 py-4 bg-tris rounded-2xl border-none font-bold outline-none text-sm" placeholder="Ex: Jean Dupont" />
+                   </div>
+                   <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Type de Compte</label>
+                      <select className="w-full px-5 py-4 bg-tris rounded-2xl border-none font-bold outline-none text-sm appearance-none">
+                         <option value="owner">Commerçant (Boutique)</option>
+                         <option value="admin">Administrateur (Staff)</option>
+                      </select>
+                   </div>
+                </div>
+
+                <div className="space-y-2">
+                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Adresse Email</label>
+                   <input type="email" required className="w-full px-5 py-4 bg-tris rounded-2xl border-none font-bold outline-none text-sm" placeholder="contact@boutique.com" />
+                </div>
+
+                <div className="space-y-2">
+                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Mot de Passe Provisoire</label>
+                   <input type="password" required className="w-full px-5 py-4 bg-tris rounded-2xl border-none font-bold outline-none text-sm" placeholder="••••••••" />
+                </div>
+
+                <div className="pt-4">
+                   <button type="submit" className="w-full py-5 brand-gradient text-white rounded-[24px] font-black text-[12px] uppercase tracking-widest shadow-xl shadow-primary/30 hover:scale-105 transition-all">
+                      Créer le Compte & Envoyer l'accès
+                   </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Payment Method Modal */}
+      <AnimatePresence>
+        {isPaymentModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-secondary/80 backdrop-blur-sm"
+              onClick={() => setIsPaymentModalOpen(false)}
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white w-full max-w-xl rounded-[48px] shadow-2xl relative overflow-hidden z-10"
+            >
+              <div className="p-10">
+                <div className="flex items-center justify-between mb-10">
+                  <h3 className="text-2xl font-black text-secondary uppercase tracking-tighter">Nouveau Moyen de Paiement</h3>
+                  <button 
+                    onClick={() => setIsPaymentModalOpen(false)}
+                    className="p-3 bg-tris rounded-2xl text-gray-400 hover:text-secondary transition-all"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <div className="space-y-10">
+                  <div>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-4 ml-1">Type de Payout</label>
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { id: 'wave', label: 'Wave', icon: Smartphone, color: 'text-primary' },
+                        { id: 'orange', label: 'Orange Money', icon: Smartphone, color: 'text-orange-500' },
+                        { id: 'free', label: 'Free Money', icon: Smartphone, color: 'text-red-500' },
+                        { id: 'bank', label: 'Banque', icon: Globe, color: 'text-blue-500' },
+                        { id: 'cash', label: 'Espèces', icon: ShoppingBag, color: 'text-secondary' },
+                        { id: 'delivery', label: 'À la livraison', icon: Package, color: 'text-gray-500' },
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => setSelectedGatewayType(item.id)}
+                          className={`flex flex-col items-center justify-center p-6 rounded-3xl border-2 transition-all gap-3 ${
+                            selectedGatewayType === item.id 
+                            ? 'border-primary bg-primary/5 shadow-inner' 
+                            : 'border-gray-50 bg-white hover:border-gray-200'
+                          }`}
+                        >
+                          <item.icon className={`w-8 h-8 ${selectedGatewayType === item.id ? 'text-primary' : 'text-gray-300'}`} />
+                          <span className={`text-[10px] font-black uppercase tracking-widest ${selectedGatewayType === item.id ? 'text-primary' : 'text-gray-400'}`}>
+                            {item.label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nom du Titulaire</label>
+                       <input type="text" className="w-full px-5 py-4 bg-tris rounded-2xl border-none font-bold outline-none text-sm" placeholder="Ex: Babacar DIOP" />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Numéro / Identifiant</label>
+                       <input type="text" className="w-full px-5 py-4 bg-tris rounded-2xl border-none font-bold outline-none text-sm" placeholder="+221 7X XXX XX XX" />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 pt-4">
+                    <button 
+                      onClick={() => setIsPaymentModalOpen(false)}
+                      className="flex-1 py-5 bg-tris text-secondary rounded-[24px] font-black text-[12px] uppercase tracking-widest hover:bg-gray-100 transition-all"
+                    >
+                      Annuler
+                    </button>
+                    <button 
+                      onClick={() => {
+                        showNotification('success', 'Moyen Ajouté', 'Le nouveau compte de paiement a été enregistré.');
+                        setIsPaymentModalOpen(false);
+                      }}
+                      className="flex-[2] py-5 brand-gradient text-white rounded-[24px] font-black text-[12px] uppercase tracking-widest shadow-xl shadow-primary/30 hover:scale-105 transition-all flex items-center justify-center gap-3"
+                    >
+                      <CheckCircle className="w-5 h-5" /> Enregistrer le Compte
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

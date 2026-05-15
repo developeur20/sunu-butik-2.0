@@ -17,6 +17,7 @@ const shopSchema = z.object({
   address: z.string().min(5, 'L\'adresse est requise'),
   phones: z.array(z.string().min(8, 'Numéro invalide')),
   whatsapp: z.string().optional(),
+  logo: z.string().optional(),
   supportEmail: z.string().email('Email invalide'),
   complaintEmail: z.string().email('Email invalide'),
   deliveryZones: z.array(z.object({
@@ -51,7 +52,7 @@ export default function ShopSettings() {
     { day: 'Dimanche', open: '00:00', close: '00:00', isClosed: true },
   ];
 
-  const { register, control, handleSubmit, formState: { errors, isSubmitting } } = useForm<ShopFormData>({
+  const { register, control, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm<ShopFormData>({
     resolver: zodResolver(shopSchema),
     defaultValues: {
       name: currentUser?.shopConfig?.name || currentUser?.displayName + "'s Shop",
@@ -59,6 +60,7 @@ export default function ShopSettings() {
       address: currentUser?.shopConfig?.address || '',
       phones: currentUser?.shopConfig?.phones?.length ? currentUser.shopConfig.phones : [''],
       whatsapp: currentUser?.shopConfig?.whatsapp || '',
+      logo: currentUser?.shopConfig?.logo || '',
       supportEmail: currentUser?.shopConfig?.supportEmail || currentUser?.email,
       complaintEmail: currentUser?.shopConfig?.complaintEmail || currentUser?.email,
       deliveryZones: currentUser?.shopConfig?.deliveryZones || [],
@@ -81,6 +83,19 @@ export default function ShopSettings() {
     control,
     name: "socialLinks"
   });
+
+  const logo = watch('logo');
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setValue('logo', reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const onSubmit = (data: ShopFormData) => {
     updateShopSettings(data);
@@ -110,6 +125,39 @@ export default function ShopSettings() {
             <h4 className="text-lg font-bold mb-6 flex items-center gap-3">
                <Store className="w-5 h-5 text-primary" /> Informations Générales
             </h4>
+            
+            <div className="mb-10 flex flex-col items-center justify-center">
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 italic">Logo de la Boutique</label>
+              <div className="relative group">
+                <div className="w-32 h-32 rounded-[24px] bg-tris border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden hover:border-primary/50 transition-all cursor-pointer shadow-inner">
+                  {logo ? (
+                    <img src={logo} alt="Shop Logo" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="text-center p-4">
+                      <Plus className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                      <span className="text-[8px] font-black uppercase text-gray-400">Choisir</span>
+                    </div>
+                  )}
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    className="absolute inset-0 opacity-0 cursor-pointer" 
+                  />
+                </div>
+                {logo && (
+                  <button 
+                    type="button"
+                    onClick={() => setValue('logo', '')}
+                    className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all shadow-lg"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+              <p className="mt-3 text-[10px] text-gray-400 font-bold uppercase tracking-tight italic">Format carré recommandé (PNG, JPG)</p>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Nom de la Boutique</label>

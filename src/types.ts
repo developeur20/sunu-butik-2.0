@@ -12,7 +12,7 @@ export interface ShopConfig {
   supportEmail: string;
   complaintEmail: string;
   deliveryZones: { zone: string; price: number }[];
-  socialLinks: { platform: 'facebook' | 'instagram' | 'twitter' | 'tiktok'; url: string }[];
+  socialLinks: { platform: 'facebook' | 'instagram' | 'twitter' | 'tiktok' | 'youtube'; url: string }[];
   openingHours: { day: string; open: string; close: string; isClosed: boolean }[];
 }
 

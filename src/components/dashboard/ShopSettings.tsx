@@ -4,7 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { 
   Store, Globe, Mail, Phone, MapPin, Clock, Plus, Trash2, 
-  Facebook, Instagram, Twitter, MessageCircle, Save, CheckCircle
+  Facebook, Instagram, Twitter, MessageCircle, Save, CheckCircle,
+  Youtube
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { useNotifications } from '../../context/NotificationContext';
@@ -23,7 +24,7 @@ const shopSchema = z.object({
     price: z.number().min(0)
   })),
   socialLinks: z.array(z.object({
-    platform: z.enum(['facebook', 'instagram', 'twitter', 'tiktok']),
+    platform: z.enum(['facebook', 'instagram', 'twitter', 'tiktok', 'youtube']),
     url: z.string().url('URL invalide')
   })),
   openingHours: z.array(z.object({
@@ -235,8 +236,9 @@ export default function ShopSettings() {
                   >
                     <option value="facebook">Facebook</option>
                     <option value="instagram">Instagram</option>
-                    <option value="twitter">Twitter (X)</option>
+                    <option value="twitter">X (Twitter)</option>
                     <option value="tiktok">TikTok</option>
+                    <option value="youtube">YouTube</option>
                   </select>
                   <input 
                     {...register(`socialLinks.${index}.url`)}

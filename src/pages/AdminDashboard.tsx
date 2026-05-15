@@ -7,7 +7,7 @@ import {
   Search, Bell, LogOut, LayoutDashboard, Layers, Star, ShoppingBag,
   ArrowUpRight, ArrowDownRight, Clock, CheckCircle, ShieldCheck,
   Store, AlertTriangle, PlayCircle, PauseCircle, Trophy, Percent,
-  Gift, Save, Plus, Zap, Download, Smartphone
+  Gift, Save, Plus, Zap, Download, Smartphone, Facebook, Instagram, Twitter, Youtube, MessageCircle, MapPin
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { PLANS, Product, Subscription, ActivityLog, User, PlanId } from '../types';
@@ -630,6 +630,73 @@ export default function AdminDashboard() {
                          onClick={() => showNotification('success', 'Config Sauvegardée', 'Les paramètres de la plateforme ont été mis à jour.')}
                          className="w-full py-4 bg-secondary text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-secondary/20 hover:scale-105 transition-all"
                        >Mettre à jour la config</button>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm md:col-span-2">
+                    <h3 className="text-lg font-black text-secondary uppercase tracking-tight mb-8 flex items-center gap-2">
+                      <Globe className="w-5 h-5 text-primary" /> Réseaux Sociaux & Contacts Plateforme
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                       <div className="space-y-4">
+                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block ml-1 italic">Canaux de Comms</label>
+                          <div className="space-y-3">
+                             <div className="relative">
+                                <input type="text" defaultValue="+221 33 800 00 00" className="w-full pl-12 pr-6 py-4 bg-tris rounded-2xl border-none font-bold outline-none text-xs" placeholder="Téléphone Support" />
+                                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                             </div>
+                             <div className="relative">
+                                <input type="text" defaultValue="+221 77 000 00 00" className="w-full pl-12 pr-6 py-4 bg-tris rounded-2xl border-none font-bold outline-none text-xs" placeholder="WhatsApp" />
+                                <MessageCircle className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500" />
+                             </div>
+                             <div className="relative">
+                                <input type="email" defaultValue="contact@sunubutik.com" className="w-full pl-12 pr-6 py-4 bg-tris rounded-2xl border-none font-bold outline-none text-xs" placeholder="Email Contact" />
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                             </div>
+                          </div>
+                       </div>
+
+                       <div className="space-y-4">
+                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block ml-1 italic">Réseaux Sociaux</label>
+                          <div className="space-y-3">
+                             <div className="relative">
+                                <input type="text" defaultValue="https://facebook.com/sunubutik" className="w-full pl-12 pr-6 py-4 bg-tris rounded-2xl border-none font-bold outline-none text-xs" placeholder="Facebook URL" />
+                                <Facebook className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-600" />
+                             </div>
+                             <div className="relative">
+                                <input type="text" defaultValue="https://instagram.com/sunubutik" className="w-full pl-12 pr-6 py-4 bg-tris rounded-2xl border-none font-bold outline-none text-xs" placeholder="Instagram URL" />
+                                <Instagram className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-pink-500" />
+                             </div>
+                             <div className="relative">
+                                <input type="text" defaultValue="https://tiktok.com/@sunubutik" className="w-full pl-12 pr-6 py-4 bg-tris rounded-2xl border-none font-bold outline-none text-xs" placeholder="TikTok URL" />
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black flex items-center justify-center font-black text-[8px]">TT</div>
+                             </div>
+                          </div>
+                       </div>
+
+                       <div className="space-y-4">
+                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block ml-1 italic">Autres Canaux</label>
+                          <div className="space-y-3">
+                             <div className="relative">
+                                <input type="text" defaultValue="https://twitter.com/sunubutik" className="w-full pl-12 pr-6 py-4 bg-tris rounded-2xl border-none font-bold outline-none text-xs" placeholder="X / Twitter URL" />
+                                <Twitter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black" />
+                             </div>
+                             <div className="relative">
+                                <input type="text" defaultValue="https://youtube.com/@sunubutik" className="w-full pl-12 pr-6 py-4 bg-tris rounded-2xl border-none font-bold outline-none text-xs" placeholder="YouTube URL" />
+                                <Youtube className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-red-600" />
+                             </div>
+                             <div className="relative">
+                                <input type="text" defaultValue="Dakar, Sénégal" className="w-full pl-12 pr-6 py-4 bg-tris rounded-2xl border-none font-bold outline-none text-xs" placeholder="Siège Social" />
+                                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                             </div>
+                          </div>
+                       </div>
+                    </div>
+                    <div className="mt-8 pt-8 border-t border-gray-50 flex justify-end">
+                       <button 
+                          onClick={() => showNotification('success', 'Infos Mises à Jour', 'Les coordonnées de la plateforme ont été enregistrées.')}
+                          className="px-10 py-4 brand-gradient text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-105 transition-all"
+                       >Sauvegarder les Coordonnées</button>
                     </div>
                   </div>
                 </div>
